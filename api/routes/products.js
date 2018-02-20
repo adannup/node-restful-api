@@ -1,11 +1,39 @@
+// https://stackoverflow.com/questions/4526273/what-does-enctype-multipart-form-data-mean
 const express = require('express');
 const mongoose = require('mongoose');
+const multer = require('multer');
 const Product = require('../models/product');
+
 const router = express.Router();
+
+// multer configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './uploads');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + file.originalname);
+  },
+});
+const fileFilter = (req, file, cb) => {
+  // reject a file
+  if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 1024 * 1024 * 5,
+  },
+});
 
 router.get('/', (req, res, next) => {
   Product.find()
-    .select('name price _id')
+    .select('name price _id productImage')
     .exec()
     .then(docs => {
       const response = {
@@ -13,6 +41,7 @@ router.get('/', (req, res, next) => {
         products: docs.map(doc => ({
           name: doc.name,
           price: doc.price,
+          productImage: doc.productImage,
           _id: doc._id,
           request: {
             type: 'GET',
@@ -38,11 +67,13 @@ router.get('/', (req, res, next) => {
     })
 });
 
-router.post('/', (req, res, next) => {
+router.post('/', upload.single('productImage'), (req, res, next) => {
+  console.log(req.file);
   const product = new Product({
     _id: new mongoose.Types.ObjectId(),
     name: req.body.name,
     price: req.body.price,
+    productImage: req.file.path.replace(/\\/, '/'),
   });
   product.save()
     .then(result => {
@@ -52,6 +83,7 @@ router.post('/', (req, res, next) => {
         createdProduct: {
           name: result.name,
           price: result.price,
+          productImage: result.productImage,
           _id: result._id,
           request: {
             type: 'POST',
