@@ -6,6 +6,7 @@ const app = express();
 
 const productRoutes = require('./api/routes/products');
 const ordersRoutes = require('./api/routes/orders');
+const userRoutes = require('./api/routes/users');
 
 mongoose.connect(`mongodb://adannup:${process.env.MONGO_ATLAS_PWD}@node-rest-shop-shard-00-00-fvtie.mongodb.net:27017,node-rest-shop-shard-00-01-fvtie.mongodb.net:27017,node-rest-shop-shard-00-02-fvtie.mongodb.net:27017/test?ssl=true&replicaSet=node-rest-shop-shard-0&authSource=admin`);
 mongoose.Promise = global.Promise;
@@ -35,6 +36,7 @@ app.use((req, res, next) => {
 // Routes which should handle requests
 app.use('/products', productRoutes);
 app.use('/orders', ordersRoutes);
+app.use('/user', userRoutes);
 
 app.use((req, res, next) => {
   const err = new Error('Not found');
