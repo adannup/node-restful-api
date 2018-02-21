@@ -2,10 +2,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Order = require('../models/order');
 const Product = require('../models/product');
+const checkAuth = require('../middleware/check-auth');
 const router = express.Router();
 
 // Handle incoming GET requests to /orders
-router.get('/', (req, res) => {
+router.get('/', checkAuth, (req, res) => {
   Order.find()
     .select('product quantity _id')
     .populate('product', 'name')
@@ -28,7 +29,7 @@ router.get('/', (req, res) => {
     .catch(err => res.status(500).json({error: err}))
 });
 
-router.post('/', (req, res) => {
+router.post('/', checkAuth, (req, res) => {
   Product.findById(req.body.productId)
     .then(product => {
       if(!product) {
@@ -68,7 +69,7 @@ router.post('/', (req, res) => {
 });
 
 router.route('/:orderId')
-  .get((req, res) => {
+  .get(checkAuth, (req, res) => {
     Order.findById(req.params.orderId)
       .populate('product', '_id name price')
       .select('product quantity _id')
@@ -93,7 +94,7 @@ router.route('/:orderId')
         })
       })
   })
-  .delete((req, res) => {
+  .delete(checkAuth, (req, res) => {
     Order.remove({ _id: req.params.orderId })
       .exec()
       .then(result => {

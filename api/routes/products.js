@@ -2,6 +2,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const checkAuth = require('../middleware/check-auth');
 const Product = require('../models/product');
 
 const router = express.Router();
@@ -31,6 +32,7 @@ const upload = multer({
   },
 });
 
+// Routes
 router.get('/', (req, res, next) => {
   Product.find()
     .select('name price _id productImage')
@@ -67,7 +69,7 @@ router.get('/', (req, res, next) => {
     })
 });
 
-router.post('/', upload.single('productImage'), (req, res, next) => {
+router.post('/', checkAuth, upload.single('productImage'), (req, res, next) => {
   console.log(req.file);
   const product = new Product({
     _id: new mongoose.Types.ObjectId(),
@@ -125,7 +127,7 @@ router.route('/:productId')
         res.status(500).json({error: err});
       });
   })
-  .patch((req, res) => {
+  .patch(checkAuth, (req, res) => {
     const id = req.params.productId;
     const updateOps = {};
     for(let ops of req.body) {
@@ -148,7 +150,7 @@ router.route('/:productId')
       });
     // Product.update({ _id: id }, { $set: { name: req.body.name, req.body.price }})
   })
-  .delete((req, res) => {
+  .delete(checkAuth, (req, res) => {
     const id = req.params.productId;
     Product.remove({_id: id})
       .exec()
